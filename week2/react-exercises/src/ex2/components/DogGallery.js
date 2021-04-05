@@ -28,7 +28,6 @@ const DogGallery = () => {
       })
   };
 
-  console.log(hasErr)
   return (
     <div>
       <Button dogPhoto={dogPhoto} getDogPhoto={getDogPhoto} />
