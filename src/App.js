@@ -1,94 +1,43 @@
-import { useState } from 'react';
+import { useContext } from 'react';
 import Search from './components/Search'
-import { Box } from './components/Box'
-import './App.css';
-require('dotenv').config()
+import Box from './components/Box'
+import { AppContext } from './components/AppContext'
+import Forecast from './components/Forecast';
+import NotFoundPage from './components/NotFoundPage'
+import {
+  BrowserRouter as Router,
+  Route,
+  Switch
+} from "react-router-dom";
 
 function App() {
-  const [datas, setData] = useState([]);
-  const [city, setCity] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [isCity, setIsCity] = useState(true);
-  const [error, setError] = useState(false);
-  const [charLim, setCharLim] = useState(false);
-  const [repeat, setRepeat] = useState(false)
-
-  const cityIds = datas.map(item => item.id);
-
-  const onSubmit = (e) => {
-    e.preventDefault();
-
-    if (city.length > 0) {
-      setRepeat(false)
-      setLoading(true);
-      setError(false);
-      setIsCity(true);
-      const API = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${process.env.REACT_APP_OPENWEATHERMAP_API_KEY}`;
-      fetch(API)
-        .then(res => res.json())
-        .then(data => {
-          setLoading(false);
-          if (data.name) {
-            if (cityIds.some(item => item === data.id)) {
-              setRepeat(true)
-            } else {
-              setIsCity(true);
-              setData([data, ...datas])
-            }
-          } else {
-            setIsCity(false)
-          }
-        })
-        .catch(() => {
-          setLoading(false);
-          setError(true);
-        })
-        .finally(() => {
-          setCharLim(false)
-          setCity('');
-        })
-    } else {
-      setCharLim(true)
-    }
-  }
-
-  const onDelete = (e) => {
-    const newData = datas.filter(data => data.id !== parseInt(e.target.id));
-    setData(newData)
-  }
+  const { datas } = useContext(AppContext);
 
   return (
-    <>
-      <h1 className='heading'>Weather</h1>
-      <Search
-        onSubmit={onSubmit}
-        city={city}
-        setCity={setCity}
-        loading={loading}
-        isCity={isCity}
-        error={error}
-        charLim={charLim}
-        repeat={repeat}
-      />
+    <Router>
+      <header>
+        <h1>Weather Forecast</h1>
+        <p>Accurate and the best forecast app just for you, Don't worry, It's always be free</p>
+      </header>
 
-      <div>
-        {datas.map((data, index) =>
-          <Box
-            key={index}
-            id={data.id}
-            name={data.name}
-            country={data.sys.country}
-            main={data.weather[0].main}
-            description={data.weather[0].description}
-            min={data.main.temp_min}
-            max={data.main.temp_max}
-            lon={data.coord.lon}
-            lat={data.coord.lat}
-            onDelete={onDelete}
-          />
-        )}
-      </div>
-    </>
+      <Switch>
+        <Route path='/' exact>
+          <Search />
+          <div className='box-container'>
+            {datas.map((data, index) =>
+              <Box
+                key={index}
+                data={data}
+              />
+            )}
+          </div>
+        </Route>
+
+       <Route path="/forecast/:cityId" exact component={Forecast} />
+       <Route path="*"><NotFoundPage /></Route>
+      </Switch>
+    </Router>
+
   )
 }
 
